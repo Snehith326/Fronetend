@@ -46,7 +46,7 @@ interface FinanceContextType {
   fetchTransactions: () => Promise<void>;
 }
 
-const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
+export const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
   // Initialize state with empty arrays

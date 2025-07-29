@@ -66,7 +66,7 @@ export default function Dashboard() {
     {
       name: 'Total Balance',
       value: `₹${(totalIncome - totalExpenses).toLocaleString()}`,
-      change: '+12.5%', // Placeholder
+      change: '+12.5', // Placeholder
       trend: 'up',
       icon: CurrencyRupeeIcon,
       color: 'emerald'
@@ -74,7 +74,7 @@ export default function Dashboard() {
     {
       name: 'Monthly Income',
       value: `₹${totalIncome.toLocaleString()}`,
-      change: '+8.2%', // Placeholder
+      change: '+8.2', // Placeholder
       trend: 'up',
       icon: ArrowTrendingUpIcon,
       color: 'blue'
@@ -82,7 +82,7 @@ export default function Dashboard() {
     {
       name: 'Monthly Expenses',
       value: `₹${totalExpenses.toLocaleString()}`,
-      change: '-3.1%', // Placeholder
+      change: '-3.1', // Placeholder
       trend: 'down',
       icon: ArrowTrendingDownIcon,
       color: 'red'
@@ -90,7 +90,7 @@ export default function Dashboard() {
     {
       name: 'Round-up Savings',
       value: `₹${roundUpSavings.toFixed(2)}`,
-      change: '+15.3%', // Placeholder
+      change: '+15.3', // Placeholder
       trend: 'up',
       icon: BanknotesIcon,
       color: 'amber'
@@ -130,7 +130,7 @@ export default function Dashboard() {
                   stat.trend === 'up' ? 'text-emerald-600' : 'text-red-600'
                 }`}>
                   {stat.trend === 'up' ? <ArrowTrendingUpIcon className="w-4 h-4 mr-1" /> : <ArrowTrendingDownIcon className="w-4 h-4 mr-1" />}
-                  {stat.change}
+                  {stat.change}%
                 </div>
               </div>
               <div className={`p-3 rounded-xl bg-${stat.color}-100 dark:bg-${stat.color}-900/20`}>

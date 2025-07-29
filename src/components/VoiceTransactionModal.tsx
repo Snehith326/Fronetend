@@ -19,7 +19,11 @@ export default function VoiceTransactionModal({ isOpen, onClose }: VoiceTransact
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const { fetchTransactions } = useFinance(); // To add the transaction after backend processing
+  const [showRegretWarningDialog, setShowRegretWarningDialog] = useState(false);
+  const [regretWarningMessage, setRegretWarningMessage] = useState('');
+  const [pendingCommand, setPendingCommand] = useState<string | null>(null);
+  // FIX: Assuming fetchTransactions will be added to FinanceContext
+  const { fetchTransactions } = useFinance();
 
   const handleTryAgain = () => {
     setTranscript('');
@@ -28,7 +32,7 @@ export default function VoiceTransactionModal({ isOpen, onClose }: VoiceTransact
   };
 
   const startListening = () => {
-    handleTryAgain(); // Reset state before starting
+    handleTryAgain();
     setIsListening(true);
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -61,43 +65,68 @@ export default function VoiceTransactionModal({ isOpen, onClose }: VoiceTransact
 
     setIsSending(true);
     try {
-      console.log(transcript);
-      
-      // Retrieve the token from localStorage
+      // FIX: Use the correct key 'token' to get the token
       const token = localStorage.getItem('token');
       
       const response = await axios.post(
         `${API_BASE_URL}/api/ai/voice-command`, 
-        { command: transcript }, // Send transcript as 'command'
-        {
-          headers: {
-            'Authorization': `Bearer ${token}` // Include the token
-          }
-        }
+        { command: transcript },
+        { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      
-      // If the backend processed it and returned a transaction object
+
       if (response.data && response.data.success) {
-        fetchTransactions();
-        // Use the addTransaction function from context to update the UI
-        // await addTransaction(response.data.data);
+        // FIX: Handle the two outcomes (warning vs. no warning) directly
+        if (response.data.regretWarning) {
+          // If there's a warning, show the dialog and stop
+          setRegretWarningMessage(response.data.message);
+          setShowRegretWarningDialog(true);
+          setPendingCommand(transcript);
+          setIsSending(false); // Stop loading indicator
+        } else {
+          // If no warning, refresh data and close the modal          
+          setIsSending(false);
+          onClose();
+        }
+        await fetchTransactions();
       }
-      
     } catch (error) {
       console.error('Error sending voice command to backend:', error);
-      // Optionally, show an error message to the user
-    } finally {
       setIsSending(false);
-      onClose(); // Close the modal after sending
     }
   };
 
   useEffect(() => {
     if (!isOpen) {
-      // Reset state when modal is closed
       setTimeout(handleTryAgain, 300);
     }
   }, [isOpen]);
+
+  const handleRegretConfirmation = async (confirm: boolean) => {
+    setShowRegretWarningDialog(false);
+    if (confirm && pendingCommand) {
+      setIsSending(true);
+      try {
+        const token = localStorage.getItem('financeApp_token');
+        const response = await axios.post(
+          `${API_BASE_URL}/api/ai/voice-command`,
+          { command: pendingCommand, confirmRegret: true },
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        if (response.data && response.data.success) {
+          await fetchTransactions();
+        }
+      } catch (error) {
+        console.error('Error re-sending voice command with confirmation:', error);
+      } finally {
+        setIsSending(false);
+        setPendingCommand(null);
+        onClose();
+      }
+    } else {
+      setPendingCommand(null);
+      onClose();
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -143,7 +172,7 @@ export default function VoiceTransactionModal({ isOpen, onClose }: VoiceTransact
                   <MicrophoneIcon className="w-8 h-8 text-white" />
                 )}
               </motion.button>
-              
+
               {transcript ? (
                 <motion.p initial={{opacity: 0}} animate={{opacity: 1}} className="mt-4 text-lg text-gray-800 dark:text-gray-200 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
                   "{transcript}"
@@ -180,10 +209,43 @@ export default function VoiceTransactionModal({ isOpen, onClose }: VoiceTransact
                     ) : (
                       <PaperAirplaneIcon className="w-5 h-5" />
                     )}
-                    confirm
+                    Confirm
                   </motion.button>
               </motion.div>
             )}
+          </motion.div>
+        </motion.div>
+      )}
+      {showRegretWarningDialog && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl text-center max-w-sm mx-auto"
+          >
+            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              {regretWarningMessage}
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => handleRegretConfirmation(false)}
+                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                No
+              </button>
+              <button
+                onClick={() => handleRegretConfirmation(true)}
+                className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Yes, I'm Sure
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       )}

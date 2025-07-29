@@ -54,12 +54,7 @@ These routes provide AI-powered financial analysis and assistance.
     *   *Output (Success):* { "success": true, "data": { ...analysisObject } }
     *   *Output (Error):* { "success": false, "message": "Error message" }
 
-*   **POST /regret-radar**
-    *   *Controller:* aiController.predictRegret
-    *   *Purpose:* Predicts potential purchase regret.
-    *   *Input:* { "itemName": "New Laptop", "itemPrice": 1200, "category": "electronics", "currentMood": "excited" }
-    *   *Output (Success):* { "success": true, "data": { ...predictionObject } }
-    *   *Output (Error):* { "success": false, "message": "Error message" }
+
 
 *   **POST /overspending**
     *   *Controller:* aiController.analyzeOverspending

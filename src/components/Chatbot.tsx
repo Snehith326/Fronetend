@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 import { 
   ChatBubbleLeftRightIcon,
   XMarkIcon,
   PaperAirplaneIcon,
   MicrophoneIcon
 } from '@heroicons/react/24/outline';
-import { useFinance } from '../context/FinanceContext';
 
 interface Message {
   id: string;
@@ -28,7 +29,6 @@ export default function Chatbot() {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { transactions, budgets, savings, canAfford, getExpensesByCategory } = useFinance();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,55 +37,6 @@ export default function Chatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const generateAIResponse = (userMessage: string): string => {
-    const message = userMessage.toLowerCase();
-    
-    // Spending insights
-    if (message.includes('spend') || message.includes('expense')) {
-      const expenses = getExpensesByCategory();
-      const topCategory = Object.entries(expenses).sort(([,a], [,b]) => b - a)[0];
-      return `You've spent the most on ${topCategory[0]} this month (₹${topCategory[1]}). Consider setting a budget limit for this category to track your spending better.`;
-    }
-    
-    // Budget questions
-    if (message.includes('budget') || message.includes('limit')) {
-      const overBudget = budgets.filter(b => b.spent > b.limit);
-      if (overBudget.length > 0) {
-        return `You're over budget in ${overBudget.length} categories: ${overBudget.map(b => b.category).join(', ')}. Try to reduce spending in these areas.`;
-      }
-      return "You're doing great! All your spending is within budget limits. Keep it up!";
-    }
-    
-    // Savings advice
-    if (message.includes('save') || message.includes('saving')) {
-      const totalSavings = savings.reduce((sum, goal) => sum + goal.current, 0);
-      return `You currently have ₹${totalSavings.toLocaleString()} saved across your goals. Consider automating your savings to reach your targets faster!`;
-    }
-    
-    // Affordability questions
-    if (message.includes('afford') || message.includes('buy')) {
-      const amountMatch = message.match(/₹?(\d+)/);
-      if (amountMatch) {
-        const amount = parseInt(amountMatch[1]);
-        const result = canAfford(amount);
-        return `${result.canAfford ? 'Yes, you can afford it!' : 'It might be tight.'} ${result.suggestion}`;
-      }
-      return "To check affordability, mention an amount like 'Can I afford ₹500?'";
-    }
-    
-    // General financial tips
-    const tips = [
-      "Try the 50/30/20 rule: 50% needs, 30% wants, 20% savings!",
-      "Set up automatic transfers to your savings account to build wealth consistently.",
-      "Track your daily expenses for a week to identify spending patterns.",
-      "Consider using the envelope method for discretionary spending categories.",
-      "Review your subscriptions monthly and cancel unused services.",
-      "Build an emergency fund equal to 3-6 months of expenses."
-    ];
-    
-    return tips[Math.floor(Math.random() * tips.length)];
-  };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -98,21 +49,51 @@ export default function Chatbot() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const userQuery = inputMessage; // Store query before clearing input
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate AI thinking time
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem('token');
+      // Make API call to the backend with the user's message as a query parameter
+      const response = await axios.get(`${API_BASE_URL}/api/ai/insights`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          query: userQuery 
+        }
+      });
+
+      let aiText = "Sorry, I couldn't find an answer to that.";
+      if (response.data && response.data.success) {
+        // Assuming the response is like: { success: true, data: { ...insightsObject } }
+        // And insightsObject has a text property. Adjust if your backend response is different.
+        aiText = response.data.data.text || response.data.data.message;
+        
+      }
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateAIResponse(inputMessage),
+        text: aiText,
         isUser: false,
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, aiResponse]);
+
+    } catch (error) {
+      console.error('Error fetching AI insights:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm having trouble connecting right now. Please try again later.",
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -135,7 +116,6 @@ export default function Chatbot() {
       >
         <ChatBubbleLeftRightIcon className="w-6 h-6" />
         
-        {/* Notification dot */}
         <motion.div
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -205,7 +185,6 @@ export default function Chatbot() {
                 </motion.div>
               ))}
               
-              {/* Typing Indicator */}
               {isTyping && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -266,7 +245,6 @@ export default function Chatbot() {
                 </motion.button>
               </div>
               
-              {/* Quick Actions */}
               <div className="flex gap-2 mt-2">
                 {['Budget status', 'Spending tips', 'Save more'].map((action) => (
                   <motion.button
