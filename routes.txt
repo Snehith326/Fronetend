@@ -1,0 +1,191 @@
+### Authentication Routes (/api/auth)
+
+These routes handle user registration, login, and profile management.
+
+*   **POST /register**
+    *   *Controller:* authController.register
+    *   *Purpose:* Registers a new user.
+    *   *Input:* { "username": "testuser", "email": "test@example.com", "password": "password123" }
+    *   *Output (Success):* { "success": true, "token": "JWT_TOKEN" }
+    *   *Output (Error):* { "success": false, "message": "Error message" }
+
+*   **POST /login**
+    *   *Controller:* authController.login
+    *   *Purpose:* Logs in an existing user.
+    *   *Input:* { "email": "test@example.com", "password": "password123" }
+    *   *Output (Success):* { "success": true, "token": "JWT_TOKEN" }
+    *   *Output (Error):* { "success": false, "message": "Error message" }
+
+*   **GET /profile**
+    *   *Controller:* authController.getProfile
+    *   *Purpose:* Retrieves the profile of the logged-in user.
+    *   *Input:* None (JWT token in header)
+    *   *Output (Success):* { "success": true, "data": { "username": "testuser", "email": "test@example.com" } }
+    *   *Output (Error):* { "success": false, "message": "Error message" }
+
+*   **GET /me**
+    *   *Controller:* authController.getMe
+    *   *Purpose:* A protected route to test authentication.
+    *   *Input:* None (JWT token in header)
+    *   *Output (Success):* { "success": true, "data": { "_id": "USER_ID", "username": "testuser" } }
+
+### AI Routes (/api/ai)
+
+These routes provide AI-powered financial analysis and assistance.
+
+*   **POST /voice-command**
+    *   *Controller:* aiController.processVoiceCommand
+    *   *Purpose:* Processes a voice command to create a transaction.
+    *   *Input:* { "command": "I spent 50 on groceries" }
+    *   *Output (Success):* { "success": true, "data": { ...transactionObject } }
+    *   *Output (Error):* { "success": false, "message": "Error message" }
+
+*   **GET /insights**
+    *   *Controller:* aiController.getFinancialInsights
+    *   *Purpose:* Provides AI-powered financial insights.
+    *   *Input:* None (JWT token in header)
+    *   *Output (Success):* { "success": true, "data": { ...insightsObject } }
+    *   *Output (Error):* { "success": false, "message": "Error message" }
+
+*   **POST /affordability**
+    *   *Controller:* aiController.analyzeAffordability
+    *   *Purpose:* Analyzes the affordability of a purchase.
+    *   *Input:* { "itemName": "New Laptop", "itemPrice": 1200, "category": "electronics" }
+    *   *Output (Success):* { "success": true, "data": { ...analysisObject } }
+    *   *Output (Error):* { "success": false, "message": "Error message" }
+
+*   **POST /regret-radar**
+    *   *Controller:* aiController.predictRegret
+    *   *Purpose:* Predicts potential purchase regret.
+    *   *Input:* { "itemName": "New Laptop", "itemPrice": 1200, "category": "electronics", "currentMood": "excited" }
+    *   *Output (Success):* { "success": true, "data": { ...predictionObject } }
+    *   *Output (Error):* { "success": false, "message": "Error message" }
+
+*   **POST /overspending**
+    *   *Controller:* aiController.analyzeOverspending
+    *   *Purpose:* Analyzes overspending patterns.
+    *   *Input:* None (JWT token in header)
+    *   *Output (Success):* { "success": true, "data": { ...analysisObject } }
+    *   *Output (Error):* { "success": false, "message": "Error message" }
+
+*   **POST /savings-optimizer**
+    *   *Controller:* aiController.optimizeSavings
+    *   *Purpose:* Provides recommendations for optimizing savings.
+    *   *Input:* None (JWT token in header)
+    *   *Output (Success):* { "success": true, "data": { ...optimizationObject } }
+    *   *Output (Error):* { "success": false, "message": "Error message" }
+
+### Budget Routes (/api/budgets)
+
+These routes handle the creation and management of budgets.
+
+*   **GET /**
+    *   *Controller:* budgetController.getBudgets
+    *   *Purpose:* Retrieves all budgets for the user.
+    *   *Input:* None (JWT token in header)
+    *   *Output (Success):* { "success": true, "data": [ ...arrayOfBudgetObjects ] }
+
+*   **POST /**
+    *   *Controller:* budgetController.createBudget
+    *   *Purpose:* Creates a new budget.
+    *   *Input:* { "category": "food", "amount": 500, "month": 10, "year": 2024 }
+    *   *Output (Success):* { "success": true, "data": { ...budgetObject } }
+
+*   **PUT /:id**
+    *   *Controller:* budgetController.updateBudget
+    *   *Purpose:* Updates an existing budget.
+    *   *Input:* { "amount": 600 }
+    *   *Output (Success):* { "success": true, "data": { ...updatedBudgetObject } }
+
+*   **DELETE /:id**
+    *   *Controller:* budgetController.deleteBudget
+    *   *Purpose:* Deletes a budget.
+    *   *Input:* None
+    *   *Output (Success):* { "success": true, "data": {} }
+
+### Income Routes (/api/incomes)
+
+*   **POST /add-income**
+    *   *Controller:* incomeController.addIncome
+    *   *Purpose:* Adds an income entry.
+    *   *Input:* { "title": "Salary", "amount": 5000, "date": "2024-10-26", "category": "salary", "description": "Monthly salary" }
+    *   *Output (Success):* { "success": true, "message": "Income Added", "data": { ...incomeObject } }
+
+*   **GET /get-incomes**
+    *   *Controller:* incomeController.getIncomes
+    *   *Purpose:* Retrieves all income entries.
+    *   *Input:* None
+    *   *Output (Success):* { "success": true, "data": [ ...arrayOfIncomeObjects ] }
+
+*   **DELETE /delete-income/:id**
+    *   *Controller:* incomeController.deleteIncome
+    *   *Purpose:* Deletes an income entry.
+    *   *Input:* None
+    *   *Output (Success):* { "success": true, "message": "Income Deleted" }
+
+### Savings Routes (/api/savings)
+
+*   **GET /**
+    *   *Controller:* savingsController.getSavingsGoals
+    *   *Purpose:* Retrieves all savings goals.
+    *   *Input:* None
+    *   *Output (Success):* { "success": true, "data": [ ...arrayOfSavingsGoalObjects ] }
+
+*   **POST /**
+    *   *Controller:* savingsController.createSavingsGoal
+    *   *Purpose:* Creates a new savings goal.
+    *   *Input:* { "title": "Vacation", "targetAmount": 2000, "targetDate": "2025-06-01" }
+    *   *Output (Success):* { "success": true, "data": { ...savingsGoalObject } }
+
+*   **PUT /:id**
+    *   *Controller:* savingsController.updateSavingsGoal
+    *   *Purpose:* Updates a savings goal.
+    *   *Input:* { "targetAmount": 2500 }
+    *   *Output (Success):* { "success": true, "data": { ...updatedSavingsGoalObject } }
+
+*   **DELETE /:id**
+    *   *Controller:* savingsController.deleteSavingsGoal
+    *   *Purpose:* Deletes a savings goal.
+    *   *Input:* None
+    *   *Output (Success):* { "success": true, "data": {} }
+
+*   **PATCH /:id/progress**
+    *   *Controller:* savingsController.updateSavingsProgress
+    *   *Purpose:* Updates the progress of a savings goal.
+    *   *Input:* { "amount": 100 }
+    *   *Output (Success):* { "success": true, "data": { ...updatedSavingsGoalObject } }
+
+### Transaction Routes (/api/transactions)
+
+*   **GET /**
+    *   *Controller:* transactionController.getTransactions
+    *   *Purpose:* Retrieves all transactions.
+    *   *Input:* None
+    *   *Output (Success):* { "success": true, "data": [ ...arrayOfTransactionObjects ] }
+
+*   **POST /**
+    *   *Controller:* transactionController.addTransaction
+    *   *Purpose:* Adds a new transaction.
+    *   *Input:* { "amount": -50, "category": "food", "description": "Dinner with friends" }
+    *   *Output (Success):* { "success": true, "data": { ...transactionObject } }
+
+*   **PUT /:id**
+    *   *Controller:* transactionController.updateTransaction
+    *   *Purpose:* Updates a transaction.
+    *   *Input:* { "amount": -60 }
+    *   *Output (Success):* { "success": true, "data": { ...updatedTransactionObject } }
+
+*   **DELETE /:id**
+    *   *Controller:* transactionController.deleteTransaction
+    *   *Purpose:* Deletes a transaction.
+    *   *Input:* None
+    *   *Output (Success):* { "success": true, "data": {} }
+
+
+
+
+
+
+
+Income Routes ( /api/incomes ):
+GET /total
