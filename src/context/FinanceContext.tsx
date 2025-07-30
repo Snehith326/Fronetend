@@ -44,6 +44,7 @@ interface FinanceContextType {
   canAfford: (amount: number) => { canAfford: boolean; suggestion: string };
   checkRegretRisk: (amount: number, category: string) => { risk: number; message: string };
   fetchTransactions: () => Promise<void>;
+  fetchSavings: () => Promise<void>;
 }
 
 export const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -191,6 +192,15 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const fetchSavings = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/savings`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      setSavings(response.data.data.map((s: any) => ({...s, deadline: new Date(s.deadline)})));
+    } catch (error) {
+      console.error("Failed to fetch savings goals:", error);
+    }
+  };
+
   const updateBudget = async (id: string, limit: number) => {
     try {
         const response = await axios.put(`${API_BASE_URL}/api/budgets/${id}`, { limit }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -265,23 +275,24 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <FinanceContext.Provider value={{
-      transactions,
-      savings,
-      budgets,
-      roundUpSavings,
-      addTransaction,
-      editTransaction,
-      deleteTransaction,
-      addSavingsGoal,
+        transactions,
+        savings,
+        budgets,
+        roundUpSavings,
+        addTransaction,
+        editTransaction,
+        deleteTransaction,
+        addSavingsGoal,
         updateSavingsGoal,
         updateBudget,
-      getExpensesByCategory,
-      canAfford,
-      checkRegretRisk,
-      fetchTransactions
-    }}>
-      {children}
-    </FinanceContext.Provider>
+        getExpensesByCategory,
+        canAfford,
+        checkRegretRisk,
+        fetchTransactions,
+        fetchSavings,
+      }}>
+        {children}
+      </FinanceContext.Provider>
   );
 }
 

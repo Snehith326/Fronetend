@@ -56,7 +56,7 @@ export default function Chatbot() {
     try {
       const token = localStorage.getItem('token');
       // Make API call to the backend with the user's message as a query parameter
-      const response = await axios.get(`${API_BASE_URL}/api/ai/insights`, {
+      const response = await axios.get(`${API_BASE_URL}/api/ai/chat`, {
         headers: {
           'Authorization': `Bearer ${token}`
         },

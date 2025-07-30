@@ -1,6 +1,10 @@
 import React from 'react';
+import { Fragment, useState, useEffect } from 'react';
+import { Dialog, Transition, Switch } from '@headlessui/react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import {
   HomeIcon,
   CreditCardIcon,
@@ -13,10 +17,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   Bars3Icon,
-  BanknotesIcon
+  BanknotesIcon,
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { ChevronUpIcon } from '@heroicons/react/20/solid';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -27,17 +30,24 @@ const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Transactions', href: '/transactions', icon: CreditCardIcon },
   { name: 'Savings', href: '/savings', icon: BanknotesIcon },
-  { name: 'Overspending Cart', href: '/overspending', icon: ShoppingCartIcon },
+
   { name: 'Affordability Simulator', href: '/simulator', icon: CalculatorIcon },
   { name: 'Regret Radar', href: '/regret-radar', icon: ExclamationTriangleIcon },
-  { name: 'Profile', href: '/profile', icon: UserIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon },
+
 ];
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation();
   const { logout, user } = useAuth();
-  const { isDark } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    // Close dropdown if sidebar collapses
+    if (collapsed) {
+      setIsDropdownOpen(false);
+    }
+  }, [collapsed]);
 
   return (
     <motion.div
@@ -75,30 +85,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           )}
         </button>
-      </div>
-
-      {/* User Profile */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center space-x-3">
-          <img
-            src={user?.avatar || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150'}
-            alt="Profile"
-            className="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-500"
-          />
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <p className="font-medium text-gray-900 dark:text-white">{user?.name}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Premium Member</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
       </div>
 
       {/* Navigation */}
@@ -161,29 +147,90 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         })}
       </nav>
 
-      {/* Logout Button */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <motion.button
-          whileHover={{ x: 4 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={logout}
-          className="flex items-center space-x-3 px-3 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 w-full"
+      {/* Profile Dropdown */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 relative">
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center space-x-3 px-3 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 w-full"
         >
-          <ArrowRightOnRectangleIcon className="w-6 h-6" />
+          <img
+            src={user?.avatar || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150'}
+            alt="Profile"
+            className="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-500"
+          />
           <AnimatePresence>
             {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0, x: -10 }}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
+                exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
-                className="font-medium"
+                className="flex-1 flex items-center justify-between"
               >
-                Logout
-              </motion.span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">{user?.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Premium Member</p>
+                </div>
+                <ChevronUpIcon className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </motion.div>
             )}
           </AnimatePresence>
-        </motion.button>
+        </button>
+
+        {/* Dropdown Menu */}
+        <AnimatePresence>
+          {isDropdownOpen && !collapsed && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute bottom-full left-0 w-full bg-white dark:bg-gray-700 rounded-lg shadow-lg mb-2 p-2"
+            >
+              <button
+                onClick={logout}
+                className="flex items-center space-x-3 px-3 py-2 rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 w-full"
+              >
+                <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                <span>Logout</span>
+              </button>
+              <div className="flex items-center justify-between px-3 py-2 text-gray-900 dark:text-white">
+                <span>Dark Mode</span>
+                <Switch
+                  checked={isDark}
+                  onChange={toggleTheme}
+                  className={`${
+                    isDark ? 'bg-emerald-600' : 'bg-gray-200'
+                  } relative inline-flex h-6 w-11 items-center rounded-full`}
+                >
+                  <span className="sr-only">Enable dark mode</span>
+                  <span
+                    className={`${
+                      isDark ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                  />
+                </Switch>
+              </div>
+              <div className="flex items-center justify-between px-3 py-2 text-gray-900 dark:text-white">
+                <span>Round-up Savings</span>
+                <Switch
+                  checked={false} // This should be replaced with actual state for round-up savings
+                  onChange={() => console.log('Toggle Round-up Savings')}
+                  className={`${
+                    false ? 'bg-emerald-600' : 'bg-gray-200'
+                  } relative inline-flex h-6 w-11 items-center rounded-full`}
+                >
+                  <span className="sr-only">Enable round-up savings</span>
+                  <span
+                    className={`${
+                      false ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                  />
+                </Switch>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

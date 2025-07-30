@@ -5,12 +5,11 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Savings from './pages/Savings';
-import OverspendingCart from './pages/OverspendingCart';
+
 import AffordabilitySimulator from './pages/AffordabilitySimulator';
 
 import RegretRadar from './pages/RegretRadar';
- import Profile from './pages/Profile';
-import Settings from './pages/Settings';
+ 
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Chatbot from './components/Chatbot';
@@ -48,12 +47,11 @@ function AppContent() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/savings" element={<Savings />} />
-              <Route path="/overspending" element={<OverspendingCart />} />
+              
               <Route path="/simulator" element={<AffordabilitySimulator />} />
     
               <Route path="/regret-radar" element={<RegretRadar />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
+              
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </AnimatePresence>

@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlusIcon, BanknotesIcon, CalendarIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import { useFinance } from '../context/FinanceContext';
+import axios from 'axios';
+
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function Savings() {
-  const { savings, roundUpSavings, addSavingsGoal } = useFinance();
+  const { savings, roundUpSavings, addSavingsGoal,fetchSavings } = useFinance();
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [newGoal, setNewGoal] = useState({
     name: '',
@@ -13,7 +17,7 @@ export default function Savings() {
     deadline: ''
   });
 
-  const handleAddGoal = (e: React.FormEvent) => {
+  const handleAddGoal = (e) => {
     e.preventDefault();
     addSavingsGoal({
       name: newGoal.name,
@@ -21,14 +25,47 @@ export default function Savings() {
       currentAmount: parseFloat(newGoal.current) || 0,
       targetDate: new Date(newGoal.deadline)
     });
-    
     setNewGoal({ name: '', target: '', current: '', deadline: '' });
     setShowAddGoal(false);
   };
 
-  const totalSavings = savings.reduce((sum, goal) => sum + goal.currentAmount, 0);
-  const totalTargets = savings.reduce((sum, goal) => sum + goal.targetAmount, 0);
+  const totalSavings = savings ? savings.reduce((sum, goal) => sum + goal.currentAmount, 0) : 0;
+  const totalTargets = savings ? savings.reduce((sum, goal) => sum + goal.targetAmount, 0) : 0;
   const overallProgress = totalTargets > 0 ? (totalSavings / totalTargets) * 100 : 0;
+
+  // Modal state and handlers
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState('');
+  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [addMoneyAmount, setAddMoneyAmount] = useState('');
+
+  const handleAddMoney = async (e) => {
+    e.preventDefault();
+    if (selectedGoal && addMoneyAmount) {
+      console.log(`Adding ₹${addMoneyAmount} to ${selectedGoal._id}`);
+      await axios.patch(`${API_BASE_URL}/api/savings/${selectedGoal._id}/progress`, { amount: addMoneyAmount }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      fetchSavings();
+      // Add logic to update currentAmount via useFinance
+    }
+    setShowModal(false);
+  };
+
+  const handleEditGoal = async (e) => {
+    e.preventDefault();
+    if (selectedGoal) {
+      console.log(`Updating ${selectedGoal.name} with new values`, newGoal);
+      const updatedGoal = {
+        name: newGoal.name,
+        targetAmount: parseFloat(newGoal.target),
+        currentAmount: parseFloat(newGoal.current) || 0,
+        targetDate: new Date(newGoal.deadline)
+      };
+      await axios.put(`${API_BASE_URL}/api/savings/${selectedGoal._id}`, updatedGoal, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      fetchSavings();
+      // Add logic to update goal via useFinance
+    }
+    setShowModal(false);
+  };
 
   return (
     <motion.div
@@ -43,7 +80,6 @@ export default function Savings() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Savings</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Track your savings goals and progress</p>
         </div>
-        
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -73,7 +109,6 @@ export default function Savings() {
             </div>
           </div>
         </motion.div>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -96,7 +131,6 @@ export default function Savings() {
             </div>
           </div>
         </motion.div>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -178,14 +212,14 @@ export default function Savings() {
 
       {/* Savings Goals */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {savings.map((goal, index) => {
-          const progress = (goal.currentAmount / goal.targetAmount) * 100;
+        {savings && savings.length > 0 ? savings.map((goal, index) => {
+          const progress = (goal.currentAmount / goal.targetAmount) * 100; // Fixed property names
           const daysLeft = Math.ceil((new Date(goal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
           const isOverdue = daysLeft < 0;
           
           return (
             <motion.div
-              key={goal.id || index}
+              key={goal._id} // Changed from goal.id to goal._id to match your data
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
@@ -255,6 +289,11 @@ export default function Savings() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setSelectedGoal(goal);
+                      setModalType('addMoney');
+                      setShowModal(true);
+                    }}
                     className="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/20 dark:hover:bg-emerald-800/30 text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors"
                   >
                     Add Money
@@ -262,6 +301,18 @@ export default function Savings() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      console.log('Edit Goal clicked', goal);
+                      setSelectedGoal(goal);
+                      setModalType('editGoal');
+                      setNewGoal({
+                        name: goal.name,
+                        target: goal.targetAmount,
+                        current: goal.currentAmount,
+                        deadline: new Date(goal.targetDate).toISOString().split('T')[0] // Ensure targetDate is handled
+                      });
+                      setShowModal(true);
+                    }}
                     className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition-colors"
                   >
                     Edit Goal
@@ -270,7 +321,7 @@ export default function Savings() {
               </div>
             </motion.div>
           );
-        })}
+        }) : <p>No savings goals yet.</p>}
       </div>
 
       {/* Add Goal Modal */}
@@ -367,6 +418,125 @@ export default function Savings() {
                     className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-xl hover:shadow-lg transition-all duration-200"
                   >
                     Create Goal
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal for Add Money and Edit Goal */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={() => setShowModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl text-white"
+            >
+              <h2 className="text-2xl font-bold mb-6">
+                {modalType === 'addMoney' ? 'Add Money' : 'Edit Goal'}
+              </h2>
+              <form onSubmit={modalType === 'addMoney' ? handleAddMoney : handleEditGoal} className="space-y-4">
+                {modalType === 'addMoney' && selectedGoal && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Amount to Add (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={addMoneyAmount}
+                      onChange={(e) => setAddMoneyAmount(e.target.value)}
+                      required
+                      min="1"
+                      className="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="e.g., 1000"
+                    />
+                  </div>
+                )}
+                {modalType === 'editGoal' && selectedGoal && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Goal Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newGoal.name}
+                        onChange={(e) => setNewGoal(prev => ({ ...prev, name: e.target.value }))}
+                        required
+                        className="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        placeholder="e.g., Emergency Fund"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Target Amount (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={newGoal.target}
+                        onChange={(e) => setNewGoal(prev => ({ ...prev, target: e.target.value }))}
+                        required
+                        min="1"
+                        className="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        placeholder="50000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Current Amount (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={newGoal.current}
+                        onChange={(e) => setNewGoal(prev => ({ ...prev, current: e.target.value }))}
+                        min="0"
+                        className="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Target Date
+                      </label>
+                      <input
+                        type="date"
+                        value={newGoal.deadline}
+                        onChange={(e) => setNewGoal(prev => ({ ...prev, deadline: e.target.value }))}
+                        required
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      />
+                    </div>
+                  </>
+                )}
+                <div className="flex gap-3 pt-4">
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 px-4 py-3 border border-gray-600 text-gray-300 rounded-xl hover:bg-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all duration-200"
+                  >
+                    {modalType === 'addMoney' ? 'Add Money' : 'Save Changes'}
                   </motion.button>
                 </div>
               </form>
