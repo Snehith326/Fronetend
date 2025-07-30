@@ -13,7 +13,7 @@ import { useFinance } from '../context/FinanceContext';
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
 export default function Dashboard() {
-  const { transactions, savings, budgets, getExpensesByCategory } = useFinance();
+  const { transactions, savings, budgets, roundUpSavings, getExpensesByCategory } = useFinance();
   const [monthlyData, setMonthlyData] = useState([]);
 
   useEffect(() => {
@@ -51,9 +51,7 @@ export default function Dashboard() {
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
   
-  const roundUpSavings = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + (Math.ceil(t.amount) - t.amount), 0);
+
 
   const expensesByCategory = getExpensesByCategory();
   const pieData = Object.entries(expensesByCategory).map(([category, amount]) => ({
@@ -66,7 +64,7 @@ export default function Dashboard() {
     {
       name: 'Total Balance',
       value: `₹${(totalIncome - totalExpenses).toLocaleString()}`,
-      change: '+12.5', // Placeholder
+      
       trend: 'up',
       icon: CurrencyRupeeIcon,
       color: 'emerald'
@@ -74,7 +72,7 @@ export default function Dashboard() {
     {
       name: 'Monthly Income',
       value: `₹${totalIncome.toLocaleString()}`,
-      change: '+8.2', // Placeholder
+      
       trend: 'up',
       icon: ArrowTrendingUpIcon,
       color: 'blue'
@@ -82,7 +80,7 @@ export default function Dashboard() {
     {
       name: 'Monthly Expenses',
       value: `₹${totalExpenses.toLocaleString()}`,
-      change: '-3.1', // Placeholder
+      
       trend: 'down',
       icon: ArrowTrendingDownIcon,
       color: 'red'
@@ -90,7 +88,7 @@ export default function Dashboard() {
     {
       name: 'Round-up Savings',
       value: `₹${roundUpSavings.toFixed(2)}`,
-      change: '+15.3', // Placeholder
+      
       trend: 'up',
       icon: BanknotesIcon,
       color: 'amber'
@@ -129,8 +127,7 @@ export default function Dashboard() {
                 <div className={`flex items-center mt-2 text-sm ${
                   stat.trend === 'up' ? 'text-emerald-600' : 'text-red-600'
                 }`}>
-                  {stat.trend === 'up' ? <ArrowTrendingUpIcon className="w-4 h-4 mr-1" /> : <ArrowTrendingDownIcon className="w-4 h-4 mr-1" />}
-                  {stat.change}%
+          
                 </div>
               </div>
               <div className={`p-3 rounded-xl bg-${stat.color}-100 dark:bg-${stat.color}-900/20`}>

@@ -8,6 +8,7 @@ interface User {
   name: string;
   email: string;
   avatar?: string;
+  roundUpSavingsEnabled?: boolean;
 }
 
 interface AuthContextType {
@@ -112,7 +113,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   if (isLoading) {
-    return <div>Loading authentication...</div>; // Or a more sophisticated loading spinner
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-500"></div>
+          <p className="text-lg text-gray-700 dark:text-gray-300">Loading authentication...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

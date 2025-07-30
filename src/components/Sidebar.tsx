@@ -1,5 +1,8 @@
 import React from 'react';
-import { Fragment, useState, useEffect } from 'react';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import { Fragment, useState, useEffect, useRef } from 'react';
 import { Dialog, Transition, Switch } from '@headlessui/react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -41,20 +44,70 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { logout, user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [roundUpSavingsEnabled, setRoundUpSavingsEnabled] = useState(false);
 
-  useEffect(() => {
-    // Close dropdown if sidebar collapses
-    if (collapsed) {
-      setIsDropdownOpen(false);
-    }
-  }, [collapsed]);
+    const handleToggleRoundupSavings = async () => {
+      try {
+        console.log('hello');
+        
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('No authentication token found.');
+          return;
+        }
+        const response = await axios.put(
+          `${API_BASE_URL}/api/user/round-up-preference`,
+          { roundUpEnabled: !roundUpSavingsEnabled },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log(response.data.data.roundUpEnabled);
+        setRoundUpSavingsEnabled(response.data.data.roundUpEnabled);
+      } catch (error) {
+        console.error('Error toggling round-up savings:', error);
+      }
+    };
+
+    useEffect(() => {
+      // Close dropdown if sidebar collapses
+      if (collapsed) {
+        setIsDropdownOpen(false);
+      }
+      if (user) {
+        setRoundUpSavingsEnabled(user.roundUpEnabled);
+      }
+    }, [collapsed, user]);
+
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      function handleClickOutside(event: MouseEvent) {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+          setIsDropdownOpen(false);
+        }
+      }
+
+      if (isDropdownOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+      } else {
+        document.removeEventListener('mousedown', handleClickOutside);
+      }
+
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [isDropdownOpen]);
+
 
   return (
     <motion.div
       initial={false}
       animate={{ width: collapsed ? 64 : 256 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl z-50"
+      className="fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl z-50 flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -148,7 +201,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* Profile Dropdown */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 relative">
+      <div ref={dropdownRef} className="p-4 border-t border-gray-200 dark:border-gray-700 relative">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className="flex items-center space-x-3 px-3 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 w-full"
@@ -207,26 +260,28 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   <span
                     className={`${
                       isDark ? 'translate-x-6' : 'translate-x-1'
-                    } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition`} 
                   />
                 </Switch>
               </div>
               <div className="flex items-center justify-between px-3 py-2 text-gray-900 dark:text-white">
                 <span>Round-up Savings</span>
                 <Switch
-                  checked={false} // This should be replaced with actual state for round-up savings
-                  onChange={() => console.log('Toggle Round-up Savings')}
-                  className={`${
-                    false ? 'bg-emerald-600' : 'bg-gray-200'
-                  } relative inline-flex h-6 w-11 items-center rounded-full`}
-                >
-                  <span className="sr-only">Enable round-up savings</span>
-                  <span
+                    checked={roundUpSavingsEnabled}
+                    onChange={handleToggleRoundupSavings}
                     className={`${
-                      false ? 'translate-x-6' : 'translate-x-1'
-                    } inline-block h-4 w-4 transform rounded-full bg-white transition`}
-                  />
-                </Switch>
+                      roundUpSavingsEnabled ? 'bg-teal-600' : 'bg-gray-200'
+                    }
+                      relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2`}
+                  >
+                    <span className="sr-only">Enable notifications</span>
+                    <span
+                      className={`${
+                        roundUpSavingsEnabled ? 'translate-x-6' : 'translate-x-1'
+                      }
+                        inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                    />
+                  </Switch>
               </div>
             </motion.div>
           )}

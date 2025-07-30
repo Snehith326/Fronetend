@@ -56,20 +56,20 @@ export default function Chatbot() {
     try {
       const token = localStorage.getItem('token');
       // Make API call to the backend with the user's message as a query parameter
-      const response = await axios.get(`${API_BASE_URL}/api/ai/chat`, {
+      const response = await axios.post(`${API_BASE_URL}/api/ai/chat`, {
+        message: userQuery
+      }, {
         headers: {
           'Authorization': `Bearer ${token}`
-        },
-        params: {
-          query: userQuery 
         }
       });
 
       let aiText = "Sorry, I couldn't find an answer to that.";
-      if (response.data && response.data.success) {
+      if (response.data ) {
+        console.log(response)
         // Assuming the response is like: { success: true, data: { ...insightsObject } }
         // And insightsObject has a text property. Adjust if your backend response is different.
-        aiText = response.data.data.text || response.data.data.message;
+        aiText = response.data.data 
         
       }
       

@@ -1,0 +1,79 @@
+@startuml
+!theme plain
+
+skinparam component {
+  BorderColor #333333
+  BackgroundColor #EEEEEE
+  ArrowColor #333333
+  ArrowFontColor #333333
+}
+
+skinparam package {
+  BorderColor #333333
+  BackgroundColor #DDDDDD
+}
+
+skinparam cloud {
+  BorderColor #333333
+  BackgroundColor #DDDDDD
+}
+
+skinparam database {
+  BorderColor #333333
+  BackgroundColor #DDDDDD
+}
+
+rectangle "Frontend Application" as FrontendApp {
+
+  package "src" {
+    component "App.tsx" as App
+
+    package "pages" {
+      component "Dashboard.tsx" as Dashboard
+      component "Login.tsx" as Login
+      component "Register.tsx" as Register
+      component "Transactions.tsx" as Transactions
+      component "Savings.tsx" as Savings
+      component "AffordabilitySimulator.tsx" as AffordabilitySimulator
+      component "RegretRadar.tsx" as RegretRadar
+    }
+
+    package "components" {
+      component "Sidebar.tsx" as Sidebar
+      component "AddTransactionModal.tsx" as AddTransactionModal
+      component "VoiceTransactionModal.tsx" as VoiceTransactionModal
+      component "Chatbot.tsx" as Chatbot
+    }
+
+    package "context" {
+      component "AuthContext.tsx" as AuthContext
+      component "FinanceContext.tsx" as FinanceContext
+      component "ThemeContext.tsx" as ThemeContext
+    }
+
+    App --> pages
+    App --> components
+    App --> context
+
+    pages --> components
+    pages --> context
+    components --> context
+
+    Sidebar --> Dashboard
+    Sidebar --> Transactions
+    Sidebar --> Savings
+    Sidebar --> AffordabilitySimulator
+    Sidebar --> RegretRadar
+
+    Transactions --> AddTransactionModal
+    Transactions --> VoiceTransactionModal
+
+    Chatbot -[hidden]-> App
+  }
+}
+
+cloud "Backend API" as BackendAPI
+
+FrontendApp -- BackendAPI : "API Calls (Auth, Data)"
+
+@enduml

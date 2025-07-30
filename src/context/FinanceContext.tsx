@@ -45,6 +45,7 @@ interface FinanceContextType {
   checkRegretRisk: (amount: number, category: string) => { risk: number; message: string };
   fetchTransactions: () => Promise<void>;
   fetchSavings: () => Promise<void>;
+  fetchRoundUpSavings: () => Promise<void>;
 }
 
 export const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -60,22 +61,19 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [transactionsRes, savingsRes, budgetsRes] = await Promise.all([
+        const [transactionsRes, savingsRes, budgetsRes, roundUpRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/transactions`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
           axios.get(`${API_BASE_URL}/api/savings`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
-          axios.get(`${API_BASE_URL}/api/budgets`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+          axios.get(`${API_BASE_URL}/api/budgets`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+          axios.get(`${API_BASE_URL}/api/round-ups/total`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
         ]);
         console.log(transactionsRes);
         // Note: You may need to parse dates from string to Date objects
         setTransactions(transactionsRes.data.data.map((t: any) => ({...t, date: new Date(t.date), id: t.id || uuidv4()})));
         setSavings(savingsRes.data.data.map((s: any) => ({...s, deadline: new Date(s.deadline)})));
         setBudgets(budgetsRes.data.data);
-
-        // Calculate initial round-up savings (optional, could also be fetched)
-        const initialRoundUp = transactionsRes.data.data
-          .filter((t: Transaction) => t.type === 'expense')
-          .reduce((sum: number, t: Transaction) => sum + (Math.ceil(t.amount) - t.amount), 0);
-        setRoundUpSavings(initialRoundUp);
+        console.log(roundUpRes.data);
+        setRoundUpSavings(roundUpRes.data.total);
 
       } catch (error) {
         console.error("Failed to fetch initial financial data:", error);
@@ -187,6 +185,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/transactions`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setTransactions(response.data.data.map((t: any) => ({...t, date: new Date(t.date), id: t.id || uuidv4()})));
+      await fetchRoundUpSavings(); // Call fetchRoundUpSavings after transactions are fetched
     } catch (error) {
       console.error("Failed to fetch transactions:", error);
     }
@@ -198,6 +197,15 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       setSavings(response.data.data.map((s: any) => ({...s, deadline: new Date(s.deadline)})));
     } catch (error) {
       console.error("Failed to fetch savings goals:", error);
+    }
+  };
+
+  const fetchRoundUpSavings = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/savings/roundup`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      setRoundUpSavings(response.data.data.roundUpAmount);
+    } catch (error) {
+      console.error("Failed to fetch round-up savings:", error);
     }
   };
 
@@ -290,6 +298,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         checkRegretRisk,
         fetchTransactions,
         fetchSavings,
+        fetchRoundUpSavings,
       }}>
         {children}
       </FinanceContext.Provider>

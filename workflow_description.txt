@@ -1,0 +1,47 @@
+Project Workflow and Control Flow Description
+
+Based on the provided directory structure, this frontend application appears to be a financial management tool with the following inferred workflow and control flow:
+
+Workflow:
+
+1.  Authentication:
+    *   Users initiate the process by registering via the <mcfile name="Register.tsx" path="c:\D\project\frontend\src\pages\Register.tsx"></mcfile> page or logging in through the <mcfile name="Login.tsx" path="c:\D\project\frontend\src\pages\Login.tsx"></mcfile> page.
+    *   Authentication state is likely managed globally using the <mcsymbol name="AuthContext" filename="AuthContext.tsx" path="c:\D\project\frontend\src\context\AuthContext.tsx" startline="1" type="class"></mcsymbol>.
+
+2.  Dashboard and Navigation:
+    *   Upon successful authentication, users are directed to the main <mcfile name="Dashboard.tsx" path="c:\D\project\frontend\src\pages\Dashboard.tsx"></mcfile>.
+    *   The <mcfile name="Sidebar.tsx" path="c:\D\project\frontend\src\components\Sidebar.tsx"></mcfile> component provides navigation to various sections of the application.
+
+3.  Financial Management Features:
+    *   Transactions: Users can view and manage their financial transactions on the <mcfile name="Transactions.tsx" path="c:\D\project\frontend\src\pages\Transactions.tsx"></mcfile> page.
+    *   Adding Transactions: New transactions can be added using either the <mcfile name="AddTransactionModal.tsx" path="c:\D\project\frontend\src\components\AddTransactionModal.tsx"></mcfile> (a standard input modal) or the <mcfile name="VoiceTransactionModal.tsx" path="c:\D\project\frontend\src\components\VoiceTransactionModal.tsx"></mcfile> (suggesting voice input capabilities).
+    *   Savings: The <mcfile name="Savings.tsx" path="c:\D\project\frontend\src\pages\Savings.tsx"></mcfile> page is dedicated to managing savings.
+    *   Affordability Simulation: Users can utilize the <mcfile name="AffordabilitySimulator.tsx" path="c:\D\project\frontend\src\pages\AffordabilitySimulator.tsx"></mcfile> for financial planning and simulations.
+    *   Regret Radar: The <mcfile name="RegretRadar.tsx" path="c:\D\project\frontend\src\pages\RegretRadar.tsx"></mcfile> likely offers insights or analysis related to spending habits.
+
+4.  Context and State Management:
+    *   Global application state is managed through React Contexts:
+        *   <mcsymbol name="AuthContext" filename="AuthContext.tsx" path="c:\D\project\frontend\src\context\AuthContext.tsx" startline="1" type="class"></mcsymbol>: Handles user authentication status and related data.
+        *   <mcsymbol name="FinanceContext" filename="FinanceContext.tsx" path="c:\D\project\frontend\src\context\FinanceContext.tsx" startline="1" type="class"></mcsymbol>: Manages financial data across the application.
+        *   <mcsymbol name="ThemeContext" filename="ThemeContext.tsx" path="c:\D\project\frontend\src\context\ThemeContext.tsx" startline="1" type="class"></mcsymbol>: Controls the application's UI theme.
+
+5.  Chatbot Integration:
+    *   The <mcfile name="Chatbot.tsx" path="c:\D\project\frontend\src\components\Chatbot.tsx"></mcfile> component suggests an interactive assistant for user queries or support.
+
+Control Flow:
+
+1.  Routing:
+    *   The `src/pages` directory indicates a page-based routing system, where different URLs map to different main components (e.g., <mcfile name="Login.tsx" path="c:\D\project\frontend\src\pages\Login.tsx"></mcfile>, <mcfile name="Dashboard.tsx" path="c:\D\project\frontend\src\pages\Dashboard.tsx"></mcfile>, <mcfile name="Transactions.tsx" path="c:\D\project\frontend\src\pages\Transactions.tsx"></mcfile>).
+
+2.  Component Hierarchy:
+    *   <mcfile name="App.tsx" path="c:\D\project\frontend\src\App.tsx"></mcfile> serves as the root component, orchestrating the overall application layout and behavior.
+    *   Components within `src/components` are modular, reusable UI elements that are integrated into various pages to build the user interface.
+
+3.  State Flow:
+    *   Data and state flow from the Context Providers (in `src/context`) downwards to the components and pages that consume them.
+    *   User interactions within components trigger functions that update the state managed by these contexts, leading to re-renders of dependent UI elements.
+
+4.  API Interactions:
+    *   It is highly probable that the frontend communicates with a backend API for operations such as user authentication, fetching and submitting financial data, and potentially interacting with the chatbot service. This interaction would typically involve asynchronous requests (e.g., using `fetch` or `axios`).
+
+This structure suggests a modern React application built with a component-based architecture, utilizing context for state management and a clear separation of concerns between pages and reusable UI components.

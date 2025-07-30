@@ -84,14 +84,14 @@ const RegretRadar = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Regret Radar</h1>
-      <p className="mb-4">Select transactions you regret and add notes.</p>
+      <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Regret Radar</h1>
+      <p className="mb-4 text-gray-600 dark:text-gray-400">Select transactions you regret and add notes.</p>
       <div className="space-y-4">
         {transactions.length === 0 ? (
-          <p>No transactions found.</p>
+          <p className="text-gray-600 dark:text-gray-400">No transactions found.</p>
         ) : (
           transactions.map(transaction => (
-            <div key={transaction._id} className="flex items-center space-x-4 p-3 border rounded-lg shadow-sm">
+            <div key={transaction._id} className="flex items-center space-x-4 p-3 border rounded-lg shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700">
               <input
                 type="radio"
                 name="regretTransaction"
@@ -100,8 +100,8 @@ const RegretRadar = () => {
                 className="form-radio h-5 w-5 text-blue-600"
               />
               <div className="flex-grow">
-                <p className="font-semibold">{transaction.description} - ${transaction.amount.toFixed(2)}</p>
-                <p className="text-sm text-gray-500">{new Date(transaction.date).toLocaleDateString()}</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{transaction.description} - ${transaction.amount.toFixed(2)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{new Date(transaction.date).toLocaleDateString()}</p>
               </div>
               {selectedTransaction?.transaction._id === transaction._id && (
                 <input
@@ -109,7 +109,7 @@ const RegretRadar = () => {
                   value={selectedTransaction?.notes || ''}
                   onChange={(e) => handleNotesChange(e.target.value)}
                   placeholder="Add regret notes..."
-                  className="flex-grow p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-grow p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 />
               )}
             </div>
